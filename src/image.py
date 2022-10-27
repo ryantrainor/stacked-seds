@@ -24,9 +24,9 @@ class ImageGenerator:
             array = []
             for line in coordinates:
                 if "point" in line:
-                    radius = line[6:18]
-                    decimal = line[19:31]
-                    coordinate = SkyCoord(radius, decimal, unit=(units.hourangle, units.degree), frame='fk5')
+                    ra = line[6:18]
+                    dec = line[19:31]
+                    coordinate = SkyCoord(ra, dec, unit=(units.hourangle, units.degree), frame='fk5')
                     array.append([coordinate.ra.degree, coordinate.dec.degree])
             self.coordinates =  coordinates.wcs_world2pix(array, 1)
         except Exception as e:
