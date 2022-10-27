@@ -1,0 +1,39 @@
+package:
+  name: stacked_seds
+  version: "1.0.0"
+
+source:
+  path: .
+
+build:
+  noarch: python
+  script: "{{ PYTHON }} -m pip install . --no-deps -vv"
+  number: 0
+  entry_points:
+    - sed-stack = scripts.run_stacking:main
+    - sed-photom = scripts.run_photometry:main
+
+requirements:
+  host:
+    - python >=3.8
+    - pip
+  run:
+    - python >=3.8
+    - numpy
+    - scipy
+    - astropy
+    - matplotlib-base
+    - pyyaml
+    - photutils
+
+test:
+  imports:
+    - stacked_seds
+  commands:
+    - sed-stack --help
+    - sed-photom --help
+
+about:
+  home: "https://github.com/your-username/stacked_seds"
+  summary: "A package for stacking galaxy images and performing SED photometry."
+  license: MIT

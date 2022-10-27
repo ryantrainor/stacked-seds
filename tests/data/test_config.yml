@@ -1,0 +1,20 @@
+# Test configuration for integration tests
+data_directory: "tests/data/"
+output_directory: "tests/data/output/"
+plot_directory: "tests/data/plots/"
+region_file: "test_regions.reg"
+zeropoints_file: "test_zeropoints.txt"
+
+stacking_params:
+  files_to_stack:
+    - "test_image.fits"
+  stamp_size: 51
+  trim_fraction: 0.1
+
+photometry_params:
+  background_reduction: true
+  galaxy_centers:
+    test_image_NEW.fits: [25.0, 25.0]
+  bkg_fit_range: [10, -5]
+  plot_title: "Test Radial Profiles"
+  output_plot_filename: "test_plot.pdf"

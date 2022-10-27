@@ -1,0 +1,36 @@
+# Default configuration file for the SED Project.
+# Copy this to your own project directory and modify it.
+
+data_directory: "data/raw/"
+output_directory: "data/processed/"
+plot_directory: "plots/"
+region_file: "q1549_nbcands.reg"
+zeropoints_file: "zeropoints.txt"
+
+stacking_params:
+  files_to_stack:
+    - "q1549_Hl.reg.fits"
+    - "q1549_Hs.reg.fits"
+    - "q1549_J1.reg.fits"
+    - "q1549_J2.reg.fits"
+    - "q1549_J3.reg.fits"
+    - "q1549_K.fits"
+    - "q1549G.zp30.reg.fits"
+    - "q1549Rse.fits"
+  stamp_size: 51
+  trim_fraction: 0.1
+
+photometry_params:
+  background_reduction: true
+  galaxy_centers:
+    q1549_Hl.reg_NEW.fits: [25.0, 23.7]
+    q1549_Hs.reg_NEW.fits: [26.0, 24.5]
+    q1549_J1.reg_NEW.fits: [25.0, 25.0]
+    q1549_J2.reg_NEW.fits: [25.5, 24.5]
+    q1549_J3.reg_NEW.fits: [25.5, 25.0]
+    q1549_K_NEW.fits: [26.0, 25.0]
+    q1549G.zp30.reg_NEW.fits: [24.0, 24.0]
+    q1549Rse_NEW.fits: [25.0, 25.0]
+  bkg_fit_range: [6, -5] # Pixels to use for background fit [start, end]
+  plot_title: "Radial Profiles of Stacked Galaxies"
+  output_plot_filename: "all_bands_radial_plot.pdf"

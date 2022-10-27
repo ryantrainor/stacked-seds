@@ -1,0 +1,349 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  release:
+    types: [published]
+
+env:
+  PACKAGE_NAME: stacked-seds
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }} with Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          make install-dev
+          make install
+
+      - name: Verify package installation
+        run: |
+          python -c "import stacked_seds; print(f'Package version: {stacked_seds.__version__}')"
+          python -c "from stacked_seds import stacking, photometry, plotting, utils; print('All modules imported successfully')"
+
+      - name: Run linting
+        run: make lint
+
+      - name: Run format check
+        run: make format-check
+
+      - name: Run unit tests with coverage
+        run: pytest tests/ -m "not slow and not integration" -v --cov=stacked_seds --cov-report=xml --cov-report=term
+
+      - name: Run integration tests
+        run: pytest tests/test_integration.py -v -s
+
+      - name: Test command-line entry points help
+        run: |
+          sed-stack --help
+          sed-photom --help
+
+      - name: Run complete workflow test
+        shell: bash
+        run: |
+          python -c "
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          # Test the complete workflow
+          test_config = Path('tests/data/test_config.yml')
+          if not test_config.exists():
+              print('ERROR: Test config not found')
+              sys.exit(1)
+
+          # Test sed-stack
+          print('Testing sed-stack...')
+          result = subprocess.run([
+              'sed-stack', str(test_config)
+          ], capture_output=True, text=True)
+
+          if result.returncode != 0:
+              print('ERROR: sed-stack failed:', result.stderr)
+              sys.exit(1)
+
+          print('SUCCESS: sed-stack completed')
+
+          # Test sed-photom
+          print('Testing sed-photom...')
+          result = subprocess.run([
+              'sed-photom', str(test_config)
+          ], capture_output=True, text=True)
+
+          if result.returncode != 0:
+              print('ERROR: sed-photom failed:', result.stderr)
+              sys.exit(1)
+
+          print('SUCCESS: sed-photom completed')
+          print('SUCCESS: Complete workflow test PASSED!')
+          "
+
+      - name: Validate output files
+        shell: bash
+        run: |
+          python -c "
+          from pathlib import Path
+          from astropy.io import fits
+
+          # Check stacked FITS file
+          stacked_file = Path('tests/data/output/test_image_NEW.fits')
+          if not stacked_file.exists():
+              raise FileNotFoundError(f'Stacked file not found: {stacked_file}')
+
+          # Validate FITS file structure
+          with fits.open(stacked_file) as hdul:
+              assert len(hdul) == 3, f'Expected 3 HDUs, got {len(hdul)}'
+              assert 'SCI' in [hdu.name for hdu in hdul], 'Missing SCI extension'
+              assert 'ERR' in [hdu.name for hdu in hdul], 'Missing ERR extension'
+              assert hdul['SCI'].data.shape == (51, 51), f'Wrong SCI shape: {hdul[\"SCI\"].data.shape}'
+              assert hdul['ERR'].data.shape == (51, 51), f'Wrong ERR shape: {hdul[\"ERR\"].data.shape}'
+
+          # Check plot file
+          plot_file = Path('tests/data/plots/test_plot.pdf')
+          if not plot_file.exists():
+              raise FileNotFoundError(f'Plot file not found: {plot_file}')
+
+          print('SUCCESS: All output files validated successfully')
+          "
+
+      - name: Run comprehensive test suite (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        run: |
+          python test_all.py
+
+      - name: Run slow tests (on main branch only)
+        if: github.ref == 'refs/heads/main'
+        run: pytest tests/ -m "slow" -v --tb=short
+
+      - name: Upload test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: |
+            tests/data/output/
+            tests/data/plots/
+            coverage.xml
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+        continue-on-error: true
+
+  test-examples:
+    name: Test Examples and Documentation
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Test configuration examples
+        run: |
+          python -c "
+          import yaml
+          from pathlib import Path
+
+          # Test that all config examples in docs are valid YAML
+          config_examples = [
+              'config/params.yml',
+              'tests/data/test_config.yml'
+          ]
+
+          for config_file in config_examples:
+              config_path = Path(config_file)
+              if config_path.exists():
+                  try:
+                      with open(config_path) as f:
+                          config = yaml.safe_load(f)
+                      print(f'SUCCESS: {config_file} is valid YAML')
+                  except yaml.YAMLError as e:
+                      print(f'ERROR: {config_file} invalid YAML: {e}')
+                      raise
+              else:
+                  print(f'WARNING: {config_file} not found')
+
+          print('SUCCESS: All configuration examples validated')
+          "
+
+      - name: Test import statements from documentation
+        run: |
+          python -c "
+          # Test all import examples from the documentation
+          print('Testing documentation import examples...')
+
+          # Basic imports
+          from stacked_seds import stacking, photometry, plotting, utils
+          print('SUCCESS: Basic imports work')
+
+          # Specific function imports
+          from stacked_seds.stacking import get_galaxy_pixel_coords, create_stamps, stack_images
+          from stacked_seds.photometry import get_radial_profile, fit_background, get_pixel_scale
+          from stacked_seds.plotting import plot_radial_profiles
+          from stacked_seds.utils import load_config
+          print('SUCCESS: Specific function imports work')
+
+          # Script imports
+          from stacked_seds.scripts.run_stacking import main as stack_main
+          from stacked_seds.scripts.run_photometry import main as photom_main
+          print('SUCCESS: Script imports work')
+
+          print('SUCCESS: All documentation imports validated')
+          "
+
+  build:
+    name: Build distribution packages
+    needs: [test, test-examples]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Build source and wheel distributions
+        run: python -m build
+
+      - name: Check distributions
+        run: twine check dist/*
+
+      - name: Test installation from wheel
+        run: |
+          pip install dist/*.whl
+          python -c "import stacked_seds; print(f'Installed version: {stacked_seds.__version__}')"
+          sed-stack --help
+          sed-photom --help
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: distributions
+          path: dist/
+
+  deploy-pypi:
+    name: Deploy to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    environment:
+      name: pypi
+      url: https://pypi.org/p/${{ env.PACKAGE_NAME }}
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: distributions
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+
+  deploy-conda:
+    name: Deploy to conda-forge
+    needs: deploy-pypi
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install conda-build
+        run: |
+          python -m pip install --upgrade pip
+          pip install conda-build anaconda-client
+
+      - name: Build conda package
+        run: |
+          conda config --set anaconda_upload no
+          conda build conda-recipe/
+
+      - name: Upload to conda-forge
+        env:
+          ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
+        run: |
+          anaconda -t $ANACONDA_API_TOKEN upload /usr/share/miniconda/envs/test/conda-bld/*/stacked-seds-*.tar.bz2
+
+  create-conda-recipe:
+    name: Create conda-forge PR
+    needs: deploy-pypi
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install grayskull
+        run: pip install grayskull
+
+      - name: Generate conda recipe
+        run: |
+          grayskull pypi stacked-seds
+          mkdir -p conda-recipe
+          cp -r stacked-seds/* conda-recipe/
+
+      - name: Create conda-forge PR
+        uses: conda-forge/conda-forge-feedstock-check-solvable@main
+        with:
+          feedstock_name: stacked-seds-feedstock

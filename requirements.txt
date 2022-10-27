@@ -1,0 +1,7 @@
+numpy
+scipy
+astropy
+matplotlib
+pyyaml
+photutils
+pytest

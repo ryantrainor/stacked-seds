@@ -1,0 +1,134 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stacked-seds"
+dynamic = ["version"]
+description = "A Python package to stack faint galaxy images and prepare them for SED analysis"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "O. Abraham"},
+    {name = "C. Chapman"},
+    {name = "E. Garcia"},
+    {name = "R. Trainor", email = "ryan.trainor@fandm.edu"},
+]
+maintainers = [
+    {name = "R. Trainor", email = "ryan.trainor@fandm.edu"},
+]
+keywords = [
+    "astronomy",
+    "astrophysics",
+    "galaxy",
+    "photometry",
+    "sed",
+    "stacking",
+    "image-processing",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.20.0",
+    "scipy>=1.7.0",
+    "matplotlib>=3.5.0",
+    "astropy>=5.0.0",
+    "pyyaml>=6.0",
+    "photutils>=1.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=22.0",
+    "flake8>=4.0",
+    "pytest>=6.0",
+    "pytest-cov>=3.0",
+    "pre-commit>=2.0",
+]
+docs = [
+    "sphinx>=4.0",
+    "sphinx-rtd-theme>=1.0",
+    "sphinx-autoapi>=2.0",
+    "myst-parser>=0.18",
+]
+
+[project.urls]
+Homepage = "https://github.com/ryantrainor/stacked-seds"
+Documentation = "https://github.com/ryantrainor/stacked-seds#readme"
+Repository = "https://github.com/ryantrainor/stacked-seds"
+"Bug Tracker" = "https://github.com/ryantrainor/stacked-seds/issues"
+
+[project.scripts]
+sed-stack = "stacked_seds.scripts.run_stacking:main"
+sed-photom = "stacked_seds.scripts.run_photometry:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "stacked_seds.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["stacked_seds*"]
+
+[tool.setuptools.package-data]
+stacked_seds = [
+    "config/*.yml",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py38"]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "-v",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests requiring real data",
+    "unit: marks tests as fast unit tests",
+]
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+
+
+[tool.coverage.run]
+source = ["stacked_seds"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*Protocol.*:",
+    "@(abc\\.)?abstractmethod",
+]

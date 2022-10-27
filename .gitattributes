@@ -1,0 +1,14 @@
+# Git attributes for FITS files and test data
+*.fits binary
+tests/data/** binary
+
+# Ensure consistent line endings
+*.py text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.rst text eol=lf
+*.txt text eol=lf
+
+# Documentation
+docs/** text eol=lf
