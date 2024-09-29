@@ -1,7 +1,6 @@
 import logging
 import astropy.units as units
 import numpy as np
-from typing import Any
 from astropy import stats
 from astropy.nddata import Cutout2D
 from astropy.coordinates import SkyCoord
@@ -10,14 +9,13 @@ from astropy import wcs
 
 
 class ImageGenerator:
+    cutout: Cutout2D
+    coordinates: fits.HDUList
+    averages: dict
+    filename: str
 
-    cutout: Cutout2D = None
-    coordinates: fits.HDUList = None
-    averages: dict = {}
-    filename: str = ""
-
-    def __init__(self, file: str) -> None:
-        self.filename = file
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
 
     def generate_coordinates(self, coordinates: list) -> None:
         try:
@@ -26,7 +24,7 @@ class ImageGenerator:
                 if "point" in line:
                     ra = line[6:18]
                     dec = line[19:31]
-                    coordinate = SkyCoord(ra, dec, unit=(units.hourangle, units.degree), frame='fk5')
+                    coordinate = SkyCoord(ra, dec, unit=(units.dimensionless_angles, units.degree), frame='fk5')
                     array.append([coordinate.ra.degree, coordinate.dec.degree])
             self.coordinates =  coordinates.wcs_world2pix(array, 1)
         except Exception as e:
@@ -54,12 +52,12 @@ class ImageGenerator:
         except Exception as e:
             logging.error(e)
 
-    def get_averages(self, averages: list, mad: list, images: list, file_path: str, galaxies: int) -> None:
+    def get_averages(self, averages: list[float], mad: list, images: list[list[int]], file_path: str, galaxies_count: int) -> None:
         ## TODO: Remove hardcoded filename and average
         try:
             for image in images:
                 averages.append(np.mean(stats.sigma_clip(image, axis=0), axis=0))
-                mad.append(1.5 * stats.median_absolute_deviation((image)/np.sqrt(galaxies-1), axis=0))
+                mad.append(1.5 * stats.median_absolute_deviation((image)/np.sqrt(galaxies_count-1), axis=0))
                 file_name = file_path + "zeropoints.txt"
                 reader = open(file_name)
                 lines = reader.readlines()
