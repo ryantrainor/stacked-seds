@@ -7,7 +7,7 @@ name = "stacked-seds"
 dynamic = ["version"]
 description = "A Python package to stack faint galaxy images and prepare them for SED analysis"
 readme = "README.md"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
     {name = "O. Abraham"},
     {name = "C. Chapman"},
