@@ -1,6 +1,6 @@
 # Stacked SEDs
 
-[![CI/CD Pipeline](https://github.com/ryantrainor/stacked-seds/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/oabraham1/stacked-seds/actions)
+[![CI/CD Pipeline](https://github.com/ryantrainor/stacked-seds/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/ryantrainor/stacked-seds/actions)
 [![Documentation](https://img.shields.io/badge/docs-github%20pages-blue)](https://stacked-seds.readthedocs.io/)
 [![PyPI version](https://badge.fury.io/py/stacked-seds.svg)](https://badge.fury.io/py/stacked-seds)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
