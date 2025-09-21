@@ -1,7 +1,7 @@
 # Stacked SEDs
 
 [![CI/CD Pipeline](https://github.com/ryantrainor/stacked-seds/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/ryantrainor/stacked-seds/actions)
-[![Documentation](https://img.shields.io/badge/docs-github%20pages-blue)](https://stacked-seds.readthedocs.io/)
+[![Documentation Status](https://readthedocs.org/projects/stacked-seds/badge/?version=latest)](https://stacked-seds.readthedocs.io/en/latest/)
 [![PyPI version](https://badge.fury.io/py/stacked-seds.svg)](https://badge.fury.io/py/stacked-seds)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -16,13 +16,47 @@ A Python package for stacking faint galaxy images from multiple broadband filter
 - **Publication-Ready Plots**: Automated generation of multi-filter comparison plots
 - **Command-Line Tools**: Simple `sed-stack` and `sed-photom` commands for easy workflow execution
 
-## Quick Start
+## Installation
 
-### Installation
+### PyPI (Recommended)
 
 ```bash
 pip install stacked-seds
 ```
+
+### Development Installation
+
+For contributors or to get the latest features:
+
+```bash
+git clone https://github.com/ryantrainor/stacked-seds.git
+cd stacked-seds
+pip install -e ".[dev]"
+```
+
+### Verify Your Installation
+
+```bash
+# Test command-line tools
+sed-stack --help
+sed-photom --help
+
+# Test Python imports
+python -c "import stacked_seds; print(f'Successfully installed version {stacked_seds.__version__}')"
+```
+
+### Requirements
+
+- Python ≥ 3.8
+- NumPy ≥ 1.20.0
+- SciPy ≥ 1.7.0
+- Astropy ≥ 5.0.0
+- Matplotlib ≥ 3.5.0
+- PhotoUtils ≥ 1.5.0
+
+All dependencies are automatically installed with pip.
+
+## Quick Start
 
 ### Basic Usage
 
@@ -37,7 +71,7 @@ sed-stack my_config.yml
 sed-photom my_config.yml
 ```
 
-### Example
+### Python API Example
 
 ```python
 from stacked_seds import stacking, photometry
@@ -53,19 +87,10 @@ radii, profile, errors = photometry.get_radial_profile(stacked_image, center)
 
 ## Documentation
 
-- **Full Documentation**: [https://ryantrainor.github.io/stacked-seds/](https://ryantrainor.github.io/stacked-seds/)
-- **API Reference**: [API Documentation](https://ryantrainor.github.io/stacked-seds/api.html)
+- **Full Documentation**: [https://stacked-seds.readthedocs.io/](https://stacked-seds.readthedocs.io/)
+- **API Reference**: [API Documentation](https://stacked-seds.readthedocs.io/en/latest/api.html)
 - **Tutorial**: [Getting Started Guide](https://stacked-seds.readthedocs.io/en/latest/tutorial.html)
-- **Examples**: See the [examples/](examples/) directory
-
-## Requirements
-
-- Python ≥ 3.8
-- NumPy ≥ 1.20.0
-- SciPy ≥ 1.7.0
-- Astropy ≥ 5.0.0
-- Matplotlib ≥ 3.5.0
-- PhotoUtils ≥ 1.5.0
+- **Configuration Guide**: [Configuration Examples](https://stacked-seds.readthedocs.io/en/latest/configuration.html)
 
 ## Contributing
 
@@ -77,6 +102,26 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 git clone https://github.com/ryantrainor/stacked-seds.git
 cd stacked-seds
 pip install -e ".[dev]"
+make test
+```
+
+### Code Quality
+
+This project uses modern Python development tools:
+
+- **Black** for code formatting
+- **flake8** for linting
+- **pytest** for testing
+- **GitHub Actions** for CI/CD
+
+```bash
+# Run all quality checks
+make check
+
+# Format code
+make format
+
+# Run tests
 make test
 ```
 

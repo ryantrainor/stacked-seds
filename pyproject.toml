@@ -64,7 +64,7 @@ docs = [
 
 [project.urls]
 Homepage = "https://github.com/ryantrainor/stacked-seds"
-Documentation = "https://github.com/ryantrainor/stacked-seds#readme"
+Documentation = "https://stacked-seds.readthedocs.io/"
 Repository = "https://github.com/ryantrainor/stacked-seds"
 "Bug Tracker" = "https://github.com/ryantrainor/stacked-seds/issues"
 
@@ -86,6 +86,18 @@ stacked_seds = [
 [tool.black]
 line-length = 88
 target-version = ["py38"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.venv
+  | venv
+  | build
+  | dist
+)/
+'''
 
 [tool.flake8]
 max-line-length = 88
@@ -112,7 +124,6 @@ filterwarnings = [
     "ignore::UserWarning",
     "ignore::DeprecationWarning",
 ]
-
 
 [tool.coverage.run]
 source = ["stacked_seds"]
