@@ -5,7 +5,7 @@ A Python package to stack faint galaxy images from multiple broadband filters
 and prepare them for Spectral Energy Distribution (SED) analysis.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "O. Abraham, C. Chapman, E. Garcia, R. Trainor"
 __email__ = "ryan.trainor@fandm.edu"
 
